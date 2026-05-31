@@ -85,3 +85,14 @@ def get_client(client_id):
         return jsonify({"error": "client not found"}), 404
 
     return jsonify(client.to_dict()), 200
+
+
+@clients_bp.get("/<int:client_id>/orders")
+def get_client_orders(client_id):
+    client = db.session.get(Client, client_id)
+
+    if not client:
+        return jsonify({"error": "client not found"}), 404
+
+    orders = sorted(client.orders, key=lambda order: order.id)
+    return jsonify([order.to_dict() for order in orders]), 200

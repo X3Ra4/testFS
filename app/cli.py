@@ -1,10 +1,9 @@
-from decimal import Decimal
-
 import click
 from sqlalchemy.exc import IntegrityError
 
 from app.database import db
-from app.models import Client, Order, OrderItem, Product
+from app.models import Client, Product
+from app.services.order_service import create_order
 
 
 def register_cli_commands(app):
@@ -98,31 +97,12 @@ def register_cli_commands(app):
 
         db.session.flush()
 
-        first_item_quantity = 2
-        second_item_quantity = 1
-        total_amount = (
-            Decimal(first_product.price) * first_item_quantity
-            + Decimal(second_product.price) * second_item_quantity
-        )
-
-        order = Order(
-            client=client,
-            total_amount=total_amount,
-            items=[
-                OrderItem(
-                    product=first_product,
-                    quantity=first_item_quantity,
-                    unit_price=first_product.price,
-                ),
-                OrderItem(
-                    product=second_product,
-                    quantity=second_item_quantity,
-                    unit_price=second_product.price,
-                ),
+        order = create_order(
+            client.id,
+            [
+                {"product_id": first_product.id, "quantity": 2},
+                {"product_id": second_product.id, "quantity": 1},
             ],
         )
-
-        db.session.add(order)
-        db.session.commit()
 
         click.echo(f"Test order created: {order}")

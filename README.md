@@ -116,10 +116,16 @@ python -c "from app import create_app; from app.models import Client, Order; app
 Check that one order has multiple products and each item stores its historical price:
 
 ```powershell
-python -c "from app import create_app; from app.models import Order; app = create_app(); app.app_context().push(); order = Order.query.order_by(Order.id.desc()).first(); print(order); [print(item, item.product, item.unit_price, item.line_total) for item in order.items]"
+python -c "from app import create_app; from app.models import Order; app = create_app(); app.app_context().push(); order = Order.query.order_by(Order.id.desc()).first(); print(order); [print(item, item.product, item.unit_price, item.total_price) for item in order.items]"
 ```
 
-For each item, `line_total` is calculated from `unit_price * quantity`.
+For each item, `total_price` is calculated from `unit_price * quantity`.
+
+Create an order through the service layer:
+
+```powershell
+python -c "from app import create_app; from app.services.order_service import create_order; app = create_app(); app.app_context().push(); order = create_order(1, [{'product_id': 1, 'quantity': 2}]); print(order); print(order.items)"
+```
 
 Check that a negative order amount is rejected:
 
@@ -153,6 +159,12 @@ Get one client:
 Invoke-RestMethod http://127.0.0.1:5000/api/clients/1
 ```
 
+Get orders for one client:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/api/clients/1/orders
+```
+
 Client JSON format:
 
 ```json
@@ -167,6 +179,76 @@ Client JSON format:
 
 Missing `name` or `email` returns `400`. Reusing an existing email returns `409`. Requesting an unknown client returns `404`.
 `name`, `email`, and `phone` are stripped before saving. Empty strings and whitespace-only values are rejected for `name` and `email`. Email is stored in lowercase, so duplicate checks are case-insensitive.
+
+## Products API
+
+Create a product:
+
+```powershell
+Invoke-RestMethod -Method Post -ContentType "application/json" -Uri http://127.0.0.1:5000/api/products -Body '{"name":"Test Product","sku":"TEST-001","price":"100.00"}'
+```
+
+Get all products:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/api/products
+```
+
+Get one product:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/api/products/1
+```
+
+Product JSON format:
+
+```json
+{
+  "id": 1,
+  "name": "Test Product",
+  "sku": "TEST-001",
+  "price": "100.00",
+  "created_at": "2026-05-31T12:00:00"
+}
+```
+
+`name` and `sku` are stripped before saving. Empty strings and whitespace-only values are rejected. `price` is parsed as `Decimal`, must be greater than zero, and is returned as a string with two decimal places. Reusing an existing `sku` returns `409`. Requesting an unknown product returns `404`.
+
+## Orders API
+
+Create an order:
+
+```powershell
+Invoke-RestMethod -Method Post -ContentType "application/json" -Uri http://127.0.0.1:5000/api/orders -Body '{"client_id":1,"items":[{"product_id":1,"quantity":2}]}'
+```
+
+Get one order:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/api/orders/1
+```
+
+Order JSON format:
+
+```json
+{
+  "id": 1,
+  "client_id": 1,
+  "items": [
+    {
+      "id": 1,
+      "product_id": 1,
+      "quantity": 2,
+      "unit_price": "100.00",
+      "total_price": "200.00"
+    }
+  ],
+  "total_amount": "200.00",
+  "created_at": "2026-05-31T12:00:00"
+}
+```
+
+`total_amount` is not accepted from the request. It is calculated on the backend from product prices and item quantities.
 
 ## Health Check
 

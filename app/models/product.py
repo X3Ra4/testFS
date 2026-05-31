@@ -9,7 +9,7 @@ from app.database import db
 class Product(db.Model):
     __tablename__ = "products"
     __table_args__ = (
-        db.CheckConstraint("price >= 0", name="check_product_price_non_negative"),
+        db.CheckConstraint("price > 0", name="check_product_price_positive"),
     )
 
     id = db.Column(db.Integer, primary_key=True)
@@ -27,10 +27,19 @@ class Product(db.Model):
     def validate_price(self, key, value):
         price = Decimal(value)
 
-        if price < 0:
-            raise ValueError("Product price cannot be negative.")
+        if price <= 0:
+            raise ValueError("Product price must be greater than zero.")
 
         return price
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "sku": self.sku,
+            "price": f"{self.price:.2f}",
+            "created_at": self.created_at.isoformat(),
+        }
 
     def __repr__(self):
         return f"<Product id={self.id} sku={self.sku} price={self.price}>"
