@@ -21,5 +21,14 @@ class Client(db.Model):
         cascade="all, delete-orphan",
     )
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "email": self.email,
+            "phone": self.phone,
+            "created_at": self.created_at.isoformat(),
+        }
+
     def __repr__(self):
         return f"<Client id={self.id} email={self.email}>"

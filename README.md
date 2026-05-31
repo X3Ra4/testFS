@@ -133,6 +133,41 @@ Check that an invalid order item is rejected:
 python -c "from app.models import OrderItem; OrderItem(order_id=1, product_id=1, quantity=0, unit_price='100.00')"
 ```
 
+## Clients API
+
+Create a client:
+
+```powershell
+Invoke-RestMethod -Method Post -ContentType "application/json" -Uri http://127.0.0.1:5000/api/clients -Body '{"name":"Test Client","email":"test@example.com","phone":"+380000000000"}'
+```
+
+Get all clients:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/api/clients
+```
+
+Get one client:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:5000/api/clients/1
+```
+
+Client JSON format:
+
+```json
+{
+  "id": 1,
+  "name": "Test Client",
+  "email": "test@example.com",
+  "phone": "+380000000000",
+  "created_at": "2026-05-31T12:00:00"
+}
+```
+
+Missing `name` or `email` returns `400`. Reusing an existing email returns `409`. Requesting an unknown client returns `404`.
+`name`, `email`, and `phone` are stripped before saving. Empty strings and whitespace-only values are rejected for `name` and `email`. Email is stored in lowercase, so duplicate checks are case-insensitive.
+
 ## Health Check
 
 Check the health endpoint:
