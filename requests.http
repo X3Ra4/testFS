@@ -1,0 +1,90 @@
+### Health check
+GET http://127.0.0.1:5000/health
+
+### Create client
+POST http://127.0.0.1:5000/api/clients
+Content-Type: application/json
+
+{
+  "name": "Test Client",
+  "email": "test@example.com",
+  "phone": "+380000000000"
+}
+
+### Get clients
+GET http://127.0.0.1:5000/api/clients
+
+### Create product
+POST http://127.0.0.1:5000/api/products
+Content-Type: application/json
+
+{
+  "name": "Test Product",
+  "sku": "TEST-001",
+  "price": "100.00"
+}
+
+### Get products
+GET http://127.0.0.1:5000/api/products
+
+### Create order
+POST http://127.0.0.1:5000/api/orders
+Content-Type: application/json
+
+{
+  "client_id": 1,
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2
+    }
+  ]
+}
+
+### Get order
+GET http://127.0.0.1:5000/api/orders/1
+
+### Get client orders
+GET http://127.0.0.1:5000/api/clients/1/orders
+
+### Error: create client without name
+POST http://127.0.0.1:5000/api/clients
+Content-Type: application/json
+
+{
+  "email": "no-name@example.com",
+  "phone": "+380000000000"
+}
+
+### Error: create product with negative price
+POST http://127.0.0.1:5000/api/products
+Content-Type: application/json
+
+{
+  "name": "Bad Product",
+  "sku": "BAD-001",
+  "price": "-10.00"
+}
+
+### Error: create order with empty items
+POST http://127.0.0.1:5000/api/orders
+Content-Type: application/json
+
+{
+  "client_id": 1,
+  "items": []
+}
+
+### Error: create order with unknown client
+POST http://127.0.0.1:5000/api/orders
+Content-Type: application/json
+
+{
+  "client_id": 999999,
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2
+    }
+  ]
+}

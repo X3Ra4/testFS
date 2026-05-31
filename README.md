@@ -1,295 +1,256 @@
 # testFS
 
-Minimal Flask project for a test assignment.
+Flask REST API for managing clients, products, and orders.
 
-## Configuration
+Orders belong to clients, orders contain products, and order totals are calculated on the backend from product prices and quantities.
 
-Application settings are loaded from `.env`.
+## Stack
 
-Available variables:
+- Python
+- Flask
+- Flask-SQLAlchemy
+- SQLite
+- pytest
+- python-dotenv
 
-```env
-APP_ENV=development
-SECRET_KEY=change-me
-DATABASE_URL=sqlite:///app.db
+## Project Structure
+
+```text
+app/
+  models/      SQLAlchemy models
+  routes/      HTTP endpoints
+  services/    business logic
+  schemas/     response serialization
+  static/      minimal frontend assets
+  templates/   minimal frontend page
+  utils/       API response helpers
+tests/         pytest tests
+init_db.py     database initialization script
+run.py         application entrypoint
+requests.http  ready-to-run HTTP examples
+Dockerfile
+docker-compose.yml
+requirements.txt
+.env.example
 ```
 
-If `APP_ENV` is not set, the app uses `development` mode. If `DATABASE_URL` is not set, the app uses local SQLite at `sqlite:///app.db`. For `APP_ENV=testing`, the app uses a separate in-memory SQLite database by default.
+## Installation
 
-## Setup
+Create a virtual environment:
 
-Create and activate a virtual environment, then install dependencies:
+```bash
+python -m venv venv
+```
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\activate
+Activate it on Windows:
+
+```bash
+venv\Scripts\activate
+```
+
+Activate it on Linux/Mac:
+
+```bash
+source venv/bin/activate
+```
+
+Install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-## Run
+## Environment
 
-```powershell
-python run.py
+Create `.env` from `.env.example`.
+
+Example:
+
+```env
+FLASK_ENV=development
+APP_ENV=development
+SECRET_KEY=change-me
+DATABASE_URL=sqlite:///k2_orders.db
 ```
 
-The application starts at:
-
-```text
-http://127.0.0.1:5000
-```
+The app selects its config by `APP_ENV`. `FLASK_ENV` is included for Flask tooling compatibility. If `DATABASE_URL` is not set, the app uses local SQLite by default. Tests use the `testing` config with a separate in-memory SQLite database.
 
 ## Database
 
-Create database tables explicitly:
+Create the SQLite database tables:
 
-```powershell
-flask --app run init-db
+```bash
+python init_db.py
 ```
 
-Create a test client:
+This command creates the configured SQLite database and all SQLAlchemy tables.
 
-```powershell
-flask --app run seed-client
+## Run
+
+Start the application:
+
+```bash
+python run.py
 ```
 
-The seed command creates this client if it does not already exist:
+Health check:
 
-```text
-name: Test Client
-email: test@example.com
-phone: +380000000000
-```
-
-Check that the client was saved:
-
-```powershell
-python -c "from app import create_app; from app.models import Client; app = create_app(); app.app_context().push(); print(Client.query.filter_by(email='test@example.com').first())"
-```
-
-Create a test product:
-
-```powershell
-flask --app run seed-product
-```
-
-The seed command creates this product if it does not already exist:
-
-```text
-name: Test Product
-sku: TEST-001
-price: 100.00
-```
-
-Check that the product was saved and the price keeps two decimal places:
-
-```powershell
-python -c "from app import create_app; from app.models import Product; app = create_app(); app.app_context().push(); product = Product.query.filter_by(sku='TEST-001').first(); print(product); print(product.price)"
-```
-
-Check that a negative price is rejected:
-
-```powershell
-python -c "from app.models import Product; Product(name='Bad Product', sku='BAD-001', price='-10.00')"
-```
-
-Create a test order for the test client:
-
-```powershell
-flask --app run seed-order
-```
-
-The seed command creates the test client and test products first if they do not exist, then creates an order with two items:
-
-```text
-client: test@example.com
-items:
-  TEST-001 x 2
-  TEST-002 x 1
-```
-
-Check that the order is linked to the client:
-
-```powershell
-python -c "from app import create_app; from app.models import Client, Order; app = create_app(); app.app_context().push(); order = Order.query.first(); print(order); print(order.client); print(Client.query.filter_by(email='test@example.com').first().orders)"
-```
-
-Check that one order has multiple products and each item stores its historical price:
-
-```powershell
-python -c "from app import create_app; from app.models import Order; app = create_app(); app.app_context().push(); order = Order.query.order_by(Order.id.desc()).first(); print(order); [print(item, item.product, item.unit_price, item.total_price) for item in order.items]"
-```
-
-For each item, `total_price` is calculated from `unit_price * quantity`.
-
-Create an order through the service layer:
-
-```powershell
-python -c "from app import create_app; from app.services.order_service import create_order; app = create_app(); app.app_context().push(); order = create_order(1, [{'product_id': 1, 'quantity': 2}]); print(order); print(order.items)"
-```
-
-Check that a negative order amount is rejected:
-
-```powershell
-python -c "from app.models import Order; Order(client_id=1, total_amount='-10.00')"
-```
-
-Check that an invalid order item is rejected:
-
-```powershell
-python -c "from app.models import OrderItem; OrderItem(order_id=1, product_id=1, quantity=0, unit_price='100.00')"
-```
-
-## Clients API
-
-Create a client:
-
-```powershell
-Invoke-RestMethod -Method Post -ContentType "application/json" -Uri http://127.0.0.1:5000/api/clients -Body '{"name":"Test Client","email":"test@example.com","phone":"+380000000000"}'
-```
-
-Get all clients:
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:5000/api/clients
-```
-
-Get one client:
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:5000/api/clients/1
-```
-
-Get orders for one client:
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:5000/api/clients/1/orders
-```
-
-Client JSON format:
-
-```json
-{
-  "id": 1,
-  "name": "Test Client",
-  "email": "test@example.com",
-  "phone": "+380000000000",
-  "created_at": "2026-05-31T12:00:00"
-}
-```
-
-Missing `name` or `email` returns `400`. Reusing an existing email returns `409`. Requesting an unknown client returns `404`.
-`name`, `email`, and `phone` are stripped before saving. Empty strings and whitespace-only values are rejected for `name` and `email`. Email is stored in lowercase, so duplicate checks are case-insensitive.
-
-## Products API
-
-Create a product:
-
-```powershell
-Invoke-RestMethod -Method Post -ContentType "application/json" -Uri http://127.0.0.1:5000/api/products -Body '{"name":"Test Product","sku":"TEST-001","price":"100.00"}'
-```
-
-Get all products:
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:5000/api/products
-```
-
-Get one product:
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:5000/api/products/1
-```
-
-Product JSON format:
-
-```json
-{
-  "id": 1,
-  "name": "Test Product",
-  "sku": "TEST-001",
-  "price": "100.00",
-  "created_at": "2026-05-31T12:00:00"
-}
-```
-
-`name` and `sku` are stripped before saving. Empty strings and whitespace-only values are rejected. `price` is parsed as `Decimal`, must be greater than zero, and is returned as a string with two decimal places. Reusing an existing `sku` returns `409`. Requesting an unknown product returns `404`.
-
-## Orders API
-
-Create an order:
-
-```powershell
-Invoke-RestMethod -Method Post -ContentType "application/json" -Uri http://127.0.0.1:5000/api/orders -Body '{"client_id":1,"items":[{"product_id":1,"quantity":2}]}'
-```
-
-Get one order:
-
-```powershell
-Invoke-RestMethod http://127.0.0.1:5000/api/orders/1
-```
-
-Order JSON format:
-
-```json
-{
-  "id": 1,
-  "client_id": 1,
-  "items": [
-    {
-      "id": 1,
-      "product_id": 1,
-      "quantity": 2,
-      "unit_price": "100.00",
-      "total_price": "200.00"
-    }
-  ],
-  "total_amount": "200.00",
-  "created_at": "2026-05-31T12:00:00"
-}
-```
-
-`total_amount` is not accepted from the request. It is calculated on the backend from product prices and item quantities.
-
-## Error Format
-
-API errors use one JSON format:
-
-```json
-{
-  "error": "Validation error",
-  "details": "Name is required"
-}
-```
-
-Validation errors return `400`, conflicts return `409`, and missing resources return `404`.
-
-## Success Format
-
-API success responses use one JSON format:
-
-```json
-{
-  "data": {},
-  "message": "Success"
-}
-```
-
-Create endpoints return `201`, and read endpoints return `200`.
-
-## Serialization
-
-API data serialization is centralized in `app/schemas/serializers.py`.
-
-## Health Check
-
-Check the health endpoint:
-
-```powershell
-Invoke-WebRequest -UseBasicParsing http://127.0.0.1:5000/health
+```http
+GET http://127.0.0.1:5000/health
 ```
 
 Expected response:
 
 ```json
-{"status":"ok"}
+{
+  "status": "ok"
+}
 ```
+
+## HTML Page
+
+A simple HTML page is available at:
+
+```text
+http://127.0.0.1:5000/
+```
+
+The page is only for manual API checks. The main project interface is the REST API.
+
+## Docker
+
+Build and start the application with Docker:
+
+```bash
+docker compose up --build
+```
+
+Create database tables inside the running container:
+
+```bash
+docker compose exec web python init_db.py
+```
+
+Check the application:
+
+```bash
+curl http://127.0.0.1:5000/health
+```
+
+## Endpoints
+
+Clients:
+
+```http
+POST /api/clients
+GET /api/clients
+GET /api/clients/<id>
+GET /api/clients/<client_id>/orders
+```
+
+Products:
+
+```http
+POST /api/products
+GET /api/products
+GET /api/products/<id>
+```
+
+Orders:
+
+```http
+POST /api/orders
+GET /api/orders/<id>
+```
+
+## Request Examples
+
+Ready-to-run HTTP examples are available in `requests.http`. They can be executed with VS Code REST Client or a compatible HTTP client.
+
+`frontend-example.ts` contains a small TypeScript integration example with API response types and a typed `createOrder()` call.
+
+Create a client:
+
+```json
+{
+  "name": "Test Client",
+  "email": "test@example.com",
+  "phone": "+380000000000"
+}
+```
+
+Create a product:
+
+```json
+{
+  "name": "Test Product",
+  "sku": "TEST-001",
+  "price": "100.00"
+}
+```
+
+Create an order:
+
+```json
+{
+  "client_id": 1,
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 2
+    }
+  ]
+}
+```
+
+## Success Response Format
+
+```json
+{
+  "data": {},
+  "message": "Success message"
+}
+```
+
+Create endpoints return `201`. Read endpoints return `200`.
+
+## Error Response Format
+
+```json
+{
+  "error": "Validation error",
+  "details": "Details text"
+}
+```
+
+Validation errors return `400`, conflicts return `409`, and missing resources return `404`.
+
+## Business Rules
+
+- An order cannot be created without an existing client.
+- An order must contain at least one product.
+- `total_amount` is not accepted from the user.
+- Order totals are calculated on the backend as `product.price * quantity`.
+- Product price must be greater than `0`.
+- Client email is unique.
+- Product SKU is unique.
+- Money values are returned as strings with two decimal places.
+
+## Tests
+
+Run tests:
+
+```bash
+pytest
+```
+
+Tests use `create_app("testing")` and an in-memory SQLite database, so development data is not touched.
+
+## Architecture
+
+- `models/` contains SQLAlchemy models.
+- `routes/` contains Flask blueprints and HTTP endpoints.
+- `services/` contains business logic, including order creation.
+- `schemas/` contains serializers for API response data.
+- `utils/` contains response helpers for success and error formats.
+- `tests/` contains pytest coverage for health, clients, products, and orders.

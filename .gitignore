@@ -16,6 +16,8 @@ db.sqlite3
 db.sqlite3-journal
 app.db
 test.db
+k2_orders.db
+*.db
 instance/
 media/
 staticfiles/

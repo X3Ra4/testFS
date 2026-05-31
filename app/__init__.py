@@ -6,6 +6,7 @@ from app.database import db
 from app.routes.clients import clients_bp
 from app.routes.health import health_bp
 from app.routes.orders import orders_bp
+from app.routes.pages import pages_bp
 from app.routes.products import products_bp
 
 
@@ -15,6 +16,7 @@ def create_app(app_env=None):
     app.json.compact = app.config["JSON_COMPACT"]
     db.init_app(app)
 
+    app.register_blueprint(pages_bp)
     app.register_blueprint(health_bp)
     app.register_blueprint(clients_bp, url_prefix="/api/clients")
     app.register_blueprint(orders_bp, url_prefix="/api/orders")
