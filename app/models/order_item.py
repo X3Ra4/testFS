@@ -43,26 +43,6 @@ class OrderItem(db.Model):
     def calculate_total_price(self):
         self.total_price = Decimal(self.unit_price) * self.quantity
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "product_id": self.product_id,
-            "quantity": self.quantity,
-            "unit_price": f"{self.unit_price:.2f}",
-            "total_price": f"{self.total_price:.2f}",
-        }
-
-    def to_detail_dict(self):
-        return {
-            "id": self.id,
-            "product_id": self.product_id,
-            "product_name": self.product.name,
-            "sku": self.product.sku,
-            "unit_price": f"{self.unit_price:.2f}",
-            "quantity": self.quantity,
-            "line_total": f"{self.total_price:.2f}",
-        }
-
     def __repr__(self):
         return (
             f"<OrderItem id={self.id} order_id={self.order_id} "

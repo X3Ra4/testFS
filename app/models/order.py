@@ -37,24 +37,6 @@ class Order(db.Model):
 
         return total_amount
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "client_id": self.client_id,
-            "items": [item.to_dict() for item in self.items],
-            "total_amount": f"{self.total_amount:.2f}",
-            "created_at": self.created_at.isoformat(),
-        }
-
-    def to_detail_dict(self):
-        return {
-            "id": self.id,
-            "client_id": self.client_id,
-            "items": [item.to_detail_dict() for item in self.items],
-            "total_amount": f"{self.total_amount:.2f}",
-            "created_at": self.created_at.isoformat(),
-        }
-
     def __repr__(self):
         return (
             f"<Order id={self.id} client_id={self.client_id} "

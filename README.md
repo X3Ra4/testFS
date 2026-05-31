@@ -250,6 +250,36 @@ Order JSON format:
 
 `total_amount` is not accepted from the request. It is calculated on the backend from product prices and item quantities.
 
+## Error Format
+
+API errors use one JSON format:
+
+```json
+{
+  "error": "Validation error",
+  "details": "Name is required"
+}
+```
+
+Validation errors return `400`, conflicts return `409`, and missing resources return `404`.
+
+## Success Format
+
+API success responses use one JSON format:
+
+```json
+{
+  "data": {},
+  "message": "Success"
+}
+```
+
+Create endpoints return `201`, and read endpoints return `200`.
+
+## Serialization
+
+API data serialization is centralized in `app/schemas/serializers.py`.
+
 ## Health Check
 
 Check the health endpoint:

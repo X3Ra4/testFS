@@ -9,9 +9,9 @@ from app.routes.orders import orders_bp
 from app.routes.products import products_bp
 
 
-def create_app():
+def create_app(app_env=None):
     app = Flask(__name__)
-    app.config.from_object(get_config())
+    app.config.from_object(get_config(app_env))
     app.json.compact = app.config["JSON_COMPACT"]
     db.init_app(app)
 

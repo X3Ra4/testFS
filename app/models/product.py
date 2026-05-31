@@ -32,14 +32,5 @@ class Product(db.Model):
 
         return price
 
-    def to_dict(self):
-        return {
-            "id": self.id,
-            "name": self.name,
-            "sku": self.sku,
-            "price": f"{self.price:.2f}",
-            "created_at": self.created_at.isoformat(),
-        }
-
     def __repr__(self):
         return f"<Product id={self.id} sku={self.sku} price={self.price}>"

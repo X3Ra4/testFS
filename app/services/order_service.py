@@ -21,40 +21,40 @@ def create_order(client_id, items_data):
         client = db.session.get(Client, client_id)
 
         if not client:
-            raise ClientNotFoundError("client not found")
+            raise ClientNotFoundError("Client not found")
 
         if not items_data:
-            raise ValueError("order must contain at least one item")
+            raise ValueError("Order must contain at least one item")
 
         order_items = []
         total_amount = Decimal("0.00")
 
         for item_data in items_data:
             if not isinstance(item_data, dict):
-                raise ValueError("each order item must be an object")
+                raise ValueError("Each order item must be an object")
 
             product_id = item_data.get("product_id")
 
             if product_id is None:
-                raise ValueError("product_id is required")
+                raise ValueError("Product id is required")
 
             product = db.session.get(Product, product_id)
 
             if not product:
-                raise ProductNotFoundError(f"product with id {product_id} not found")
+                raise ProductNotFoundError(f"Product with id {product_id} not found")
 
             quantity = item_data.get("quantity")
 
             if quantity is None:
-                raise ValueError("quantity is required")
+                raise ValueError("Quantity is required")
 
             try:
                 quantity = int(quantity)
             except (TypeError, ValueError):
-                raise ValueError("quantity must be a positive integer")
+                raise ValueError("Quantity must be a positive integer")
 
             if quantity <= 0:
-                raise ValueError("quantity must be greater than zero")
+                raise ValueError("Quantity must be greater than zero")
 
             unit_price = Decimal(product.price)
             total_price = unit_price * quantity
@@ -62,7 +62,7 @@ def create_order(client_id, items_data):
 
             order_items.append(
                 OrderItem(
-                    product=product,
+                    product_id=product.id,
                     quantity=quantity,
                     unit_price=unit_price,
                     total_price=total_price,

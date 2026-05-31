@@ -32,6 +32,6 @@ config_by_env = {
 }
 
 
-def get_config():
-    app_env = os.getenv("APP_ENV", "development").lower()
+def get_config(app_env=None):
+    app_env = (app_env or os.getenv("APP_ENV", "development")).lower()
     return config_by_env.get(app_env, DevelopmentConfig)
