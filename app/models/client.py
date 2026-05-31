@@ -15,6 +15,11 @@ class Client(db.Model):
         nullable=False,
         default=lambda: datetime.now(timezone.utc),
     )
+    orders = db.relationship(
+        "Order",
+        back_populates="client",
+        cascade="all, delete-orphan",
+    )
 
     def __repr__(self):
         return f"<Client id={self.id} email={self.email}>"
