@@ -1,6 +1,6 @@
 from decimal import Decimal, InvalidOperation
 
-from flask import Blueprint, abort, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, redirect, render_template, request, url_for
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
@@ -65,7 +65,11 @@ def clients_create():
                 db.session.rollback()
                 errors.append("Клиент с таким email уже существует")
             else:
+                flash("Клиент успешно создан.", "success")
                 return redirect(url_for("pages.clients_list"))
+
+    if errors:
+        flash("Проверьте правильность заполнения формы.", "danger")
 
     return render_template(
         "clients/create.html",
@@ -136,7 +140,11 @@ def products_create():
                 db.session.rollback()
                 errors.append("Цена должна быть больше 0")
             else:
+                flash("Товар успешно создан.", "success")
                 return redirect(url_for("pages.products_list"))
+
+    if errors:
+        flash("Проверьте правильность заполнения формы.", "danger")
 
     return render_template(
         "products/create.html",
@@ -267,7 +275,11 @@ def orders_create():
             except ValueError as exc:
                 errors.append(str(exc))
             else:
+                flash("Заказ успешно создан.", "success")
                 return redirect(url_for("pages.orders_detail", order_id=order.id))
+
+    if errors:
+        flash("Проверьте правильность заполнения формы.", "danger")
 
     return render_template(
         "orders/create.html",
