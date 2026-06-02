@@ -1,9 +1,11 @@
+from decimal import Decimal, InvalidOperation
+
 from flask import Blueprint, redirect, render_template, request, url_for
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from app.database import db
-from app.models import Client
+from app.models import Client, Product
 
 
 pages_bp = Blueprint("pages", __name__)
@@ -66,6 +68,77 @@ def clients_create():
 
     return render_template(
         "clients/create.html",
+        errors=errors,
+        form_data=form_data,
+    )
+
+
+@pages_bp.get("/products")
+def products_list():
+    products = Product.query.order_by(Product.id).all()
+    return render_template("products/list.html", products=products)
+
+
+@pages_bp.route("/products/create", methods=["GET", "POST"])
+def products_create():
+    form_data = {
+        "name": "",
+        "sku": "",
+        "price": "",
+    }
+    errors = []
+
+    if request.method == "POST":
+        form_data = {
+            "name": request.form.get("name", "").strip(),
+            "sku": request.form.get("sku", "").strip(),
+            "price": request.form.get("price", "").strip(),
+        }
+
+        if not form_data["name"]:
+            errors.append("Название обязательно")
+
+        if not form_data["sku"]:
+            errors.append("SKU обязателен")
+
+        price = None
+        if not form_data["price"]:
+            errors.append("Цена обязательна")
+        else:
+            try:
+                price = Decimal(form_data["price"])
+            except (InvalidOperation, ValueError):
+                errors.append("Цена должна быть числом")
+            else:
+                if price <= 0:
+                    errors.append("Цена должна быть больше 0")
+
+        if form_data["sku"]:
+            existing_product = Product.query.filter_by(sku=form_data["sku"]).first()
+            if existing_product:
+                errors.append("Товар с таким SKU уже существует")
+
+        if not errors:
+            product = Product(
+                name=form_data["name"],
+                sku=form_data["sku"],
+                price=price,
+            )
+            db.session.add(product)
+
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                errors.append("Товар с таким SKU уже существует")
+            except ValueError:
+                db.session.rollback()
+                errors.append("Цена должна быть больше 0")
+            else:
+                return redirect(url_for("pages.products_list"))
+
+    return render_template(
+        "products/create.html",
         errors=errors,
         form_data=form_data,
     )
