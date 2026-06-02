@@ -46,19 +46,19 @@
         </thead>
         <tbody>
           {% for item in form_data["items"] %}
-            <tr>
+            <tr class="order-item-row">
               <td>
-                <select class="form-select" name="items[{{ loop.index0 }}][product_id]">
+                <select class="form-select order-product-select" name="items[{{ loop.index0 }}][product_id]">
                   <option value="">Выберите товар</option>
                   {% for product in products %}
-                    <option value="{{ product.id }}" {% if item.product_id|string == product.id|string %}selected{% endif %}>
+                    <option value="{{ product.id }}" data-price="{{ product.price }}" {% if item.product_id|string == product.id|string %}selected{% endif %}>
                       {{ product.name }} - {{ product.sku }} ({{ "%.2f"|format(product.price) }})
                     </option>
                   {% endfor %}
                 </select>
               </td>
               <td>
-                <input class="form-control" name="items[{{ loop.index0 }}][quantity]" type="number" min="1" value="{{ item.quantity }}">
+                <input class="form-control order-quantity-input" name="items[{{ loop.index0 }}][quantity]" type="number" min="1" value="{{ item.quantity }}">
               </td>
             </tr>
           {% endfor %}
@@ -66,9 +66,18 @@
       </table>
     </div>
 
+    <div class="alert alert-secondary d-flex justify-content-between align-items-center" role="status" aria-live="polite">
+      <span>Предварительная сумма</span>
+      <strong id="order-total-preview">0.00</strong>
+    </div>
+
     <div class="d-flex gap-2">
       <button class="btn btn-primary" type="submit">Создать заказ</button>
       <a class="btn btn-outline-secondary" href="{{ url_for('pages.orders_list') }}">Отмена</a>
     </div>
   </form>
+{% endblock %}
+
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/orders.js') }}"></script>
 {% endblock %}

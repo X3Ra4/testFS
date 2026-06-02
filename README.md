@@ -117,6 +117,14 @@ http://127.0.0.1:5000/
 
 The page is only for manual API checks. The main project interface is the REST API.
 
+## Frontend TypeScript
+
+- TypeScript logic for the order total preview is in `app/static/js/orders.ts`.
+- The compiled browser file is `app/static/js/orders.js`.
+- The order creation page loads `orders.js`, not `orders.ts`.
+- The frontend preview is only a convenience for the user.
+- The final order total is always calculated on the backend from order items.
+
 ## Docker
 
 Build and start the application with Docker:
