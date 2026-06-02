@@ -1,97 +1,22 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>testFS API</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
-  </head>
-  <body>
-    <main class="shell">
-      <header class="page-header">
-        <div>
-          <p class="eyebrow">Flask REST API</p>
-          <h1>testFS Orders</h1>
+{% extends "base.html" %}
+
+{% block title %}testFS Orders{% endblock %}
+
+{% block content %}
+  <section class="py-5">
+    <div class="row align-items-center g-4">
+      <div class="col-lg-8">
+        <p class="text-uppercase text-secondary fw-semibold mb-2">Flask-приложение</p>
+        <h1 class="display-5 fw-bold mb-3">testFS Orders</h1>
+        <p class="lead text-secondary mb-4">
+          Простая система для работы с клиентами, товарами и заказами через единый веб-интерфейс.
+        </p>
+        <div class="d-flex flex-wrap gap-2">
+          <a class="btn btn-primary" href="/clients">Клиенты</a>
+          <a class="btn btn-success" href="/products">Товары</a>
+          <a class="btn btn-outline-primary" href="/orders">Заказы</a>
         </div>
-        <button id="load-health" type="button">Check health</button>
-      </header>
-
-      <section class="status-bar" aria-live="polite">
-        <strong>Status</strong>
-        <pre id="status-output">Ready</pre>
-      </section>
-
-      <section class="grid">
-        <form id="client-form" class="panel">
-          <h2>Create client</h2>
-          <label>
-            Name
-            <input name="name" type="text" placeholder="Test Client" required>
-          </label>
-          <label>
-            Email
-            <input name="email" type="email" placeholder="test@example.com" required>
-          </label>
-          <label>
-            Phone
-            <input name="phone" type="text" placeholder="+380000000000">
-          </label>
-          <button type="submit">Create client</button>
-        </form>
-
-        <form id="product-form" class="panel">
-          <h2>Create product</h2>
-          <label>
-            Name
-            <input name="name" type="text" placeholder="Test Product" required>
-          </label>
-          <label>
-            SKU
-            <input name="sku" type="text" placeholder="TEST-001" required>
-          </label>
-          <label>
-            Price
-            <input name="price" type="text" inputmode="decimal" placeholder="100.00" required>
-          </label>
-          <button type="submit">Create product</button>
-        </form>
-
-        <form id="order-form" class="panel">
-          <h2>Create order</h2>
-          <label>
-            Client ID
-            <input name="client_id" type="number" min="1" placeholder="1" required>
-          </label>
-          <label>
-            Product ID
-            <input name="product_id" type="number" min="1" placeholder="1" required>
-          </label>
-          <label>
-            Quantity
-            <input name="quantity" type="number" min="1" placeholder="2" required>
-          </label>
-          <button type="submit">Create order</button>
-        </form>
-
-        <form id="orders-form" class="panel">
-          <h2>Client orders</h2>
-          <label>
-            Client ID
-            <input name="client_id" type="number" min="1" placeholder="1" required>
-          </label>
-          <button type="submit">Load orders</button>
-        </form>
-      </section>
-
-      <section class="orders-section">
-        <div class="section-title">
-          <h2>Orders</h2>
-          <button id="clear-orders" type="button">Clear</button>
-        </div>
-        <div id="orders-list" class="orders-list">No orders loaded</div>
-      </section>
-    </main>
-
-    <script src="{{ url_for('static', filename='app.js') }}"></script>
-  </body>
-</html>
+      </div>
+    </div>
+  </section>
+{% endblock %}
