@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}Создать заказ{% endblock %}
+
+{% block content %}
+  <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">Создать заказ</h1>
+      <p class="text-secondary mb-0">Выберите клиента и товары для нового заказа.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('pages.orders_list') }}">К списку</a>
+  </div>
+
+  {% if errors %}
+    <div class="alert alert-danger" role="alert">
+      <ul class="mb-0">
+        {% for error in errors %}
+          <li>{{ error }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post" action="{{ url_for('pages.orders_create') }}">
+    <div class="card mb-4">
+      <div class="card-body">
+        <label class="form-label" for="client_id">Клиент</label>
+        <select class="form-select" id="client_id" name="client_id" required>
+          <option value="">Выберите клиента</option>
+          {% for client in clients %}
+            <option value="{{ client.id }}" {% if form_data.client_id|string == client.id|string %}selected{% endif %}>
+              {{ client.name }} ({{ client.email }})
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="table-responsive mb-4">
+      <table class="table table-striped align-middle">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">Товар</th>
+            <th scope="col" style="width: 180px;">Количество</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in form_data["items"] %}
+            <tr>
+              <td>
+                <select class="form-select" name="items[{{ loop.index0 }}][product_id]">
+                  <option value="">Выберите товар</option>
+                  {% for product in products %}
+                    <option value="{{ product.id }}" {% if item.product_id|string == product.id|string %}selected{% endif %}>
+                      {{ product.name }} - {{ product.sku }} ({{ "%.2f"|format(product.price) }})
+                    </option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                <input class="form-control" name="items[{{ loop.index0 }}][quantity]" type="number" min="1" value="{{ item.quantity }}">
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button class="btn btn-primary" type="submit">Создать заказ</button>
+      <a class="btn btn-outline-secondary" href="{{ url_for('pages.orders_list') }}">Отмена</a>
+    </div>
+  </form>
+{% endblock %}

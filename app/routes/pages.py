@@ -1,11 +1,12 @@
 from decimal import Decimal, InvalidOperation
 
-from flask import Blueprint, redirect, render_template, request, url_for
+from flask import Blueprint, abort, redirect, render_template, request, url_for
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
 from app.database import db
-from app.models import Client, Product
+from app.models import Client, Order, Product
+from app.services import ClientNotFoundError, ProductNotFoundError, create_order
 
 
 pages_bp = Blueprint("pages", __name__)
@@ -139,6 +140,139 @@ def products_create():
 
     return render_template(
         "products/create.html",
+        errors=errors,
+        form_data=form_data,
+    )
+
+
+@pages_bp.get("/orders")
+def orders_list():
+    orders = Order.query.order_by(Order.id).all()
+    return render_template("orders/list.html", orders=orders)
+
+
+@pages_bp.get("/orders/<int:order_id>")
+def orders_detail(order_id):
+    order = db.session.get(Order, order_id)
+
+    if not order:
+        abort(404)
+
+    return render_template("orders/detail.html", order=order)
+
+
+@pages_bp.route("/orders/create", methods=["GET", "POST"])
+def orders_create():
+    clients = Client.query.order_by(Client.id).all()
+    products = Product.query.order_by(Product.id).all()
+    form_data = {
+        "client_id": "",
+        "items": [
+            {"product_id": "", "quantity": ""},
+            {"product_id": "", "quantity": ""},
+            {"product_id": "", "quantity": ""},
+        ],
+    }
+    errors = []
+
+    if request.method == "POST":
+        form_data = {
+            "client_id": request.form.get("client_id", "").strip(),
+            "items": [],
+        }
+
+        for index in range(3):
+            form_data["items"].append(
+                {
+                    "product_id": request.form.get(f"items[{index}][product_id]", "").strip(),
+                    "quantity": request.form.get(f"items[{index}][quantity]", "").strip(),
+                }
+            )
+
+        client_id = None
+        if not form_data["client_id"]:
+            errors.append("Клиент обязателен")
+        else:
+            try:
+                client_id = int(form_data["client_id"])
+            except ValueError:
+                errors.append("Клиент выбран неверно")
+            else:
+                if not db.session.get(Client, client_id):
+                    errors.append("Выбранный клиент не найден")
+
+        items_data = []
+        selected_product_ids = set()
+        duplicate_product = False
+
+        for item in form_data["items"]:
+            product_id_value = item["product_id"]
+            quantity_value = item["quantity"]
+
+            if not product_id_value and not quantity_value:
+                continue
+
+            if not product_id_value:
+                errors.append("Выберите товар или оставьте строку пустой")
+                continue
+
+            try:
+                product_id = int(product_id_value)
+            except ValueError:
+                errors.append("Товар выбран неверно")
+                continue
+
+            if product_id in selected_product_ids:
+                duplicate_product = True
+                continue
+
+            selected_product_ids.add(product_id)
+
+            if not db.session.get(Product, product_id):
+                errors.append("Выбранный товар не найден")
+                continue
+
+            if not quantity_value:
+                errors.append("Укажите количество для выбранного товара")
+                continue
+
+            try:
+                quantity = int(quantity_value)
+            except ValueError:
+                errors.append("Количество должно быть числом больше 0")
+                continue
+
+            if quantity <= 0:
+                errors.append("Количество должно быть больше 0")
+                continue
+
+            items_data.append(
+                {
+                    "product_id": product_id,
+                    "quantity": quantity,
+                }
+            )
+
+        if duplicate_product:
+            errors.append("Один товар нельзя выбрать несколько раз")
+
+        if not items_data:
+            errors.append("Выберите хотя бы один товар")
+
+        if not errors:
+            try:
+                order = create_order(client_id, items_data)
+            except (ClientNotFoundError, ProductNotFoundError) as exc:
+                errors.append(str(exc))
+            except ValueError as exc:
+                errors.append(str(exc))
+            else:
+                return redirect(url_for("pages.orders_detail", order_id=order.id))
+
+    return render_template(
+        "orders/create.html",
+        clients=clients,
+        products=products,
         errors=errors,
         form_data=form_data,
     )

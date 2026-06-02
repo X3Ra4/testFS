@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ #{{ order.id }}{% endblock %}
+
+{% block content %}
+  {% set total_amount = order.items|sum(attribute="total_price") %}
+
+  <div class="d-flex align-items-center justify-content-between gap-3 mb-4">
+    <div>
+      <h1 class="h2 mb-1">Заказ #{{ order.id }}</h1>
+      <p class="text-secondary mb-0">Подробная информация о заказе.</p>
+    </div>
+    <a class="btn btn-outline-secondary" href="{{ url_for('pages.orders_list') }}">Назад к заказам</a>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Клиент</h2>
+          {% if order.client %}
+            <dl class="row mb-0">
+              <dt class="col-sm-4">Имя</dt>
+              <dd class="col-sm-8">{{ order.client.name }}</dd>
+              <dt class="col-sm-4">Email</dt>
+              <dd class="col-sm-8">{{ order.client.email }}</dd>
+              <dt class="col-sm-4">Телефон</dt>
+              <dd class="col-sm-8">{{ order.client.phone or "-" }}</dd>
+            </dl>
+          {% else %}
+            <p class="text-secondary mb-0">Клиент не найден</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2 class="h5 mb-3">Заказ</h2>
+          <dl class="row mb-0">
+            <dt class="col-sm-5">ID заказа</dt>
+            <dd class="col-sm-7">{{ order.id }}</dd>
+            <dt class="col-sm-5">Дата заказа</dt>
+            <dd class="col-sm-7">{{ order.created_at.strftime("%Y-%m-%d %H:%M") if order.created_at else "-" }}</dd>
+            <dt class="col-sm-5">Общая сумма</dt>
+            <dd class="col-sm-7 fw-semibold">{{ "%.2f"|format(total_amount) }}</dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover align-middle">
+      <thead class="table-light">
+        <tr>
+          <th scope="col">Название товара</th>
+          <th scope="col">Количество</th>
+          <th scope="col">Цена на момент заказа</th>
+          <th scope="col">Сумма строки</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order.items %}
+          {% set row_total = item.quantity * item.unit_price %}
+          <tr>
+            <td>{{ item.product.name if item.product else "Товар не найден" }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ "%.2f"|format(item.unit_price) }}</td>
+            <td>{{ "%.2f"|format(row_total) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="3" class="text-end">Итого</th>
+          <th>{{ "%.2f"|format(total_amount) }}</th>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+{% endblock %}
